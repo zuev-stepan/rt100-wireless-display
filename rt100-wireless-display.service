@@ -1,0 +1,10 @@
+[Unit]
+Description=Updates display on Epomaker RT100 connected with 2.4 dongle
+After=multi-user.target
+
+[Service]
+ExecStart=/usr/bin/python3 /root/rt100-wireless-display/main.py --monitor 10
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
