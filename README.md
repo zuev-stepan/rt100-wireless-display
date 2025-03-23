@@ -1,4 +1,4 @@
-# Updates display on Epomaker RT100 connected with 2.4 dongle
+# Updates display on Epomaker RT100 connected with 2.4ghz dongle
 
 ## Every command here must be run as root
 
@@ -14,15 +14,15 @@ usage: main.py [-h] [--cpu CPU] [--current-cpu] [--temperature TEMPERATURE] [--c
 
 options:
   -h, --help            show this help message and exit
-  --cpu CPU             Cpu load, will be clipped to [0, 99]
+  --cpu CPU             Show custom cpu load, clipped to [0, 99]
   --current-cpu         Show current CPU load
   --temperature TEMPERATURE
-                        Temperature, will be clipped to [-99, 127]
+                        Show custom temperature, will be clipped to [-99, 127]
   --current-temperature
                         Show current CPU temperature
-  --time TIME           Time in iso format (1111-11-11T11:11)
+  --time TIME           Show date and time in iso format (1111-11-11T11:11)
   --current-time        Show current time
-  --monitor MONITOR     Update all values every n seconds
+  --monitor MONITOR     Update cpu and temperature every MONITOR seconds, time every 24 hours
 ```
 
 ## Service

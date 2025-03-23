@@ -1,7 +1,7 @@
 import sys
 import hid
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import argparse
 import psutil
 
@@ -9,7 +9,7 @@ import psutil
 WIRELESS_RT100_VENDOR_ID = 0x3151
 WIRELESS_RT100_PRODUCT_ID = 0x4011
 RT100_REPORT_SIZE = 128
-SLEEP = 0.2
+SLEEP = 0.3
 
 
 class DeviceHolder(hid.device):
@@ -30,8 +30,8 @@ class DeviceHolder(hid.device):
     def get_report(self):
         self.get_feature_report(0, self.report_size)
 
-    #def __del__(self):
-    #    self.close()
+    def __del__(self):
+        self.close()
 
 
 class WirelessRT100(DeviceHolder):
@@ -41,6 +41,7 @@ class WirelessRT100(DeviceHolder):
         self.send_report("fe 40")
         self.send_report("f6 0a")
         self.poll()
+        self.next_update_time = None
 
     def poll(self):
         time.sleep(SLEEP)
@@ -66,7 +67,11 @@ class WirelessRT100(DeviceHolder):
 
     def set_time(self, value: str):
         value = datetime.now() if value == 'NOW' else datetime.fromisoformat(value)
-        
+        if self.next_update_time is not None:
+            if self.next_update_time > value:
+                return
+            
+        self.next_update_time = value + timedelta(days=1)
         self.send_report(f"28 00 00 00 00 00 00 d7"
                          f"{value.year:04x} {value.month:02x} {value.day:02x}"
                          f"{value.hour:02x} {value.minute:02x} {value.second:02x}")
@@ -100,6 +105,7 @@ def get_cpu_temp():
 
 def main(cpu, current_cpu, temp, current_temp, date_time, current_time, monitor):
     device = WirelessRT100()
+    
     if monitor is not None:
         current_cpu = True
         current_temp = True
@@ -134,7 +140,7 @@ if __name__ == "__main__":
     parser.add_argument('--current-temperature', action="store_true", help="Show current CPU temperature")
     parser.add_argument('--time', type=str, help="Show date and time in iso format (1111-11-11T11:11)")
     parser.add_argument('--current-time', action="store_true", help="Show current time")
-    parser.add_argument('--monitor', type=int, help="Update all values every n seconds")
+    parser.add_argument('--monitor', type=int, help="Update cpu and temperature every MONITOR seconds, time every 24 hours")
     args = parser.parse_args()
 
     while True:
