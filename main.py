@@ -4,12 +4,23 @@ import time
 from datetime import datetime, timedelta
 import argparse
 import psutil
+import keyboard
 
 
 WIRELESS_RT100_VENDOR_ID = 0x3151
 WIRELESS_RT100_PRODUCT_ID = 0x4011
 RT100_REPORT_SIZE = 128
 SLEEP = 0.3
+
+
+class KeyboardMonitor:
+    def __init__(self, update_period):
+        self.update_period = update_period
+        self.update()
+        keyboard.on_press(lambda x: self.update())
+
+    def update(self):
+        self.last_active = datetime.now()
 
 
 class DeviceHolder(hid.device):
@@ -124,7 +135,10 @@ def main(cpu, current_cpu, temp, current_temp, date_time, current_time, monitor)
         if monitor is None:
             break
 
-        time.sleep(monitor)
+        while True:
+            time.sleep(monitor.update_period)
+            if monitor.last_active + timedelta(minutes=2) >= datetime.now():
+                break
 
 
 if __name__ == "__main__":
@@ -143,13 +157,17 @@ if __name__ == "__main__":
     parser.add_argument('--monitor', type=int, help="Update cpu and temperature every MONITOR seconds, time every 24 hours")
     args = parser.parse_args()
 
+    monitor = None
+    if args.monitor:
+        monitor = KeyboardMonitor(args.monitor)
+
     while True:
         try:
-            main(args.cpu, args.current_cpu, args.temperature, args.current_temperature, args.time, args.current_time, args.monitor)
+            main(args.cpu, args.current_cpu, args.temperature, args.current_temperature, args.time, args.current_time, monitor)
         except Exception as e:
             print(e)
 
-        if args.monitor is None:
+        if monitor is None:
             break
 
         time.sleep(10)
